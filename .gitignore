@@ -1,0 +1,6 @@
+*.ignore
+bench/*
+build/*
+out/*
+dependencies/*
+.vscode/*
