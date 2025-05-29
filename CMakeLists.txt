@@ -28,9 +28,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/lib)
 set(TEST_BINARY lockfree_test)
 file(GLOB_RECURSE TEST_FILES ${CMAKE_SOURCE_DIR}/tests/*.cpp)
 
-set(BENCHMARK_BINARY lockfree_benchmark)
-file(GLOB_RECURSE BENCHMARK_FILES ${CMAKE_SOURCE_DIR}/bench/*.cpp)
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -75,30 +72,4 @@ target_link_libraries(
   PRIVATE
   GTest::GTest
   GTest::Main
-)
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-#                                               BENCHMARK                                                  #
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-add_executable(
-  ${BENCHMARK_BINARY}
-  ${BENCHMARK_FILES}
-)
-
-target_compile_options(
-  ${BENCHMARK_BINARY}
-  PRIVATE
-  -O0
-  -Wunused
-  -Wall
-  -Wpedantic
-  -Wswitch
-  -Wfloat-equal
-)
-
-target_link_libraries(
-  ${BENCHMARK_BINARY}
-  PRIVATE
-  celero
 )
