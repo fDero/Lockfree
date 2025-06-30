@@ -12,7 +12,7 @@ struct payload_t {
 };
 
 template <size_t N>
-void producer_function(dero::lockfree::queue<payload_t, N> &q, size_t tid) {
+void producer_function(dero::lockfree::queue<payload_t, N>& q, size_t tid) {
     for (size_t item_id = 0; item_id < 10; ++item_id) {
         payload_t item{tid, item_id};
         while (!q.push(item)) {
@@ -22,7 +22,7 @@ void producer_function(dero::lockfree::queue<payload_t, N> &q, size_t tid) {
 }
 
 template <typename T, size_t N>
-void consumer_function(dero::lockfree::queue<T, N> &q, const bool &done) {
+void consumer_function(dero::lockfree::queue<T, N>& q, const bool& done) {
     while (!done || q.size() > 0) {
         auto item = q.pop();
         if (item.has_value()) {
@@ -49,13 +49,13 @@ TEST(Queue, MultithreadInsertionsAndDeletions) {
             [&q, &producers_done]() { consumer_function(q, producers_done); });
     }
 
-    for (auto &producer : producers) {
+    for (auto& producer : producers) {
         producer.join();
     }
 
     producers_done = true;
 
-    for (auto &consumer : consumers) {
+    for (auto& consumer : consumers) {
         consumer.join();
     }
 }
