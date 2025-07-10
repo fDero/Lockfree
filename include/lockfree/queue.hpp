@@ -27,8 +27,8 @@ template <typename T, size_t N> class queue {
 
     bool push(const T& value) {
         while (m_size.load(std::memory_order_acquire) < N) {
-            if (m_storage[m_push_index.load(std::memory_order_acquire) % N]
-                    .try_set(value)) {
+            size_t index = m_push_index.load(std::memory_order_acquire);
+            if (m_storage[index % N].try_set(value)) {
                 m_push_index.fetch_add(1, std::memory_order_release);
                 m_size.fetch_add(1, std::memory_order_release);
                 return true;
@@ -39,9 +39,8 @@ template <typename T, size_t N> class queue {
 
     std::optional<T> pop() {
         while (m_size.load(std::memory_order_acquire) > 0) {
-            auto res =
-                m_storage[m_pop_index.load(std::memory_order_acquire) % N]
-                    .try_extract();
+            size_t index = m_pop_index.load(std::memory_order_acquire);
+            auto res = m_storage[index % N].try_extract();
             if (res.has_value()) {
                 m_pop_index.fetch_add(1, std::memory_order_release);
                 m_size.fetch_sub(1, std::memory_order_release);
