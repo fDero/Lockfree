@@ -1,18 +1,13 @@
 
-#include <array>
-#include <atomic>
-#include <gtest/gtest.h>
+#pragma once
 #include <lockfree/queue.hpp>
-#include <string>
-#include <thread>
 
 struct payload_t {
     size_t thread_id;
     size_t item_id;
 };
 
-template <size_t N>
-void producer_function(dero::lockfree::queue<payload_t, N>& q, size_t tid) {
+template <typename Queue> void producer_function(Queue& q, size_t tid) {
     for (size_t item_id = 0; item_id < 10; ++item_id) {
         payload_t item{tid, item_id};
         while (!q.push(item)) {
@@ -21,8 +16,7 @@ void producer_function(dero::lockfree::queue<payload_t, N>& q, size_t tid) {
     }
 }
 
-template <typename T, size_t N>
-void consumer_function(dero::lockfree::queue<T, N>& q, const bool& done) {
+template <typename Queue> void consumer_function(Queue& q, const bool& done) {
     while (!done || q.size() > 0) {
         auto item = q.pop();
         if (item.has_value()) {
@@ -31,20 +25,20 @@ void consumer_function(dero::lockfree::queue<T, N>& q, const bool& done) {
     }
 }
 
-TEST(Queue, MultithreadInsertionsAndDeletions) {
-
-    dero::lockfree::queue<payload_t, 100> q;
+template <typename Queue, size_t CONSUMERS, size_t PRODUCERS>
+void multiple_push_multiple_pops_concurrently() {
+    Queue q;
     std::vector<std::thread> producers;
     std::vector<std::thread> consumers;
 
-    for (size_t thread_id = 0; thread_id < 10; ++thread_id) {
+    bool producers_done = false;
+
+    for (size_t thread_id = 0; thread_id < PRODUCERS; ++thread_id) {
         producers.emplace_back(
             [&q, thread_id]() { producer_function(q, thread_id); });
     }
 
-    bool producers_done = false;
-
-    for (size_t thread_id = 0; thread_id < 10; ++thread_id) {
+    for (size_t thread_id = 0; thread_id < CONSUMERS; ++thread_id) {
         consumers.emplace_back(
             [&q, &producers_done]() { consumer_function(q, producers_done); });
     }

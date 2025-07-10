@@ -1,6 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <lockfree/queue.hpp>
+#include <mocks/consumer_producer_dummies.hpp>
 
 TEST(Queue, InitialSizeIsZero) {
     dero::lockfree::queue<int, 10> q;
