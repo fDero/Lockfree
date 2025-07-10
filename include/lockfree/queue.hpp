@@ -1,9 +1,12 @@
-
 #pragma once
 
 #include "lockfree/maybe.hpp"
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <cstddef>
+#include <iostream>
+#include <thread>
 
 namespace dero::lockfree {
 
@@ -38,16 +41,32 @@ template <typename T, size_t N> class queue {
     }
 
     std::optional<T> pop() {
+        size_t attempts = 0;
         while (m_size.load(std::memory_order_acquire) > 0) {
             size_t index = m_pop_index.load(std::memory_order_acquire);
-            auto res = m_storage[index % N].try_extract();
-            if (res.has_value()) {
-                m_pop_index.fetch_add(1, std::memory_order_release);
-                m_size.fetch_sub(1, std::memory_order_release);
-                return res;
+            constexpr auto ord = std::memory_order_acq_rel;
+            if (!m_pop_index.compare_exchange_weak(index, index + 1, ord)) {
+                continue;
             }
+            auto out = m_storage[index % N].try_extract();
+            if (out.has_value()) {
+                m_size.fetch_sub(1, std::memory_order_release);
+                return out;
+            }
+            backoff(attempts++);
         }
         return std::nullopt;
+    }
+
+  private:
+    void backoff(size_t attempts) {
+        if (attempts < 64) {
+            std::this_thread::yield();
+        } else if (attempts < 128) {
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+        } else if (attempts > 16) {
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+        }
     }
 };
 
